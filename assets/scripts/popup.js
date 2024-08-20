@@ -1,24 +1,51 @@
-document.getElementById('autofill').addEventListener('click', () => {
-	const button = document.getElementById('autofill');
+function saveOptions() {
+	const enableCompanyName = document.getElementById( 'enableCompanyName' ).checked;
+	const enableAdditionalInfo = document.getElementById( 'enableAdditionalInfo' ).checked;
+	const userCountry = document.getElementById( 'userCountry' ).value;
+	
+	chrome.storage.local.set( {
+		enableCompanyName: enableCompanyName,
+		enableAdditionalInfo: enableAdditionalInfo,
+		userCountry: userCountry
+	} );
+}
+
+// Function to restore options from Chrome storage
+function restoreOptions() {
+	chrome.storage.local.get( ['enableCompanyName', 'enableAdditionalInfo', 'userCountry'], ( items ) => {
+		document.getElementById( 'enableCompanyName' ).checked = items.enableCompanyName || false;
+		document.getElementById( 'enableAdditionalInfo' ).checked = items.enableAdditionalInfo || false;
+		document.getElementById( 'userCountry' ).value = items.userCountry || 'US'; // Default to US if not set
+	} );
+}
+
+// Add event listeners
+document.addEventListener( 'DOMContentLoaded', restoreOptions );
+document.getElementById( 'enableCompanyName' ).addEventListener( 'change', saveOptions );
+document.getElementById( 'enableAdditionalInfo' ).addEventListener( 'change', saveOptions );
+document.getElementById( 'userCountry' ).addEventListener( 'change', saveOptions );
+
+document.getElementById( 'autofill' ).addEventListener( 'click', () => {
+	const button = document.getElementById( 'autofill' );
 	const options = {
-		enableCompanyName: document.getElementById('enableCompanyName').checked,
-		enableAdditionalInfo: document.getElementById('enableAdditionalInfo').checked,
-		userCountry: document.getElementById('userCountry').value
+		enableCompanyName: document.getElementById( 'enableCompanyName' ).checked,
+		enableAdditionalInfo: document.getElementById( 'enableAdditionalInfo' ).checked,
+		userCountry: document.getElementById( 'userCountry' ).value
 	};
 	
-	button.classList.add('loading'); // Add loading state
+	button.classList.add( 'loading' ); // Add loading state
 	
 	// Updated fetch URL with the 'format=json' query string
-	fetch(`https://randomuser.me/api/?nat=${options.userCountry}&format=json`)
-		.then(response => response.json())
-		.then(data => {
+	fetch( `https://randomuser.me/api/?nat=${options.userCountry}&format=json` )
+		.then( response => response.json() )
+		.then( data => {
 			const user = data.results[0];
 			
-			chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-				chrome.scripting.executeScript({
-					target: { tabId: tabs[0].id },
-					function: (user, options) => {
-						function fillForm(user, options) {
+			chrome.tabs.query( {active: true, currentWindow: true}, ( tabs ) => {
+				chrome.scripting.executeScript( {
+					target: {tabId: tabs[0].id},
+					function: ( user, options ) => {
+						function fillForm( user, options ) {
 							const name = user.name;
 							const location = user.location;
 							
@@ -41,58 +68,76 @@ document.getElementById('autofill').addEventListener('click', () => {
 								"Delivery by the end of the day, please."
 							];
 							
-							const firstNameField = document.querySelector('input[name="billing_first_name"]');
-							if (firstNameField) firstNameField.value = name.first;
-							
-							const lastNameField = document.querySelector('input[name="billing_last_name"]');
-							if (lastNameField) lastNameField.value = name.last;
-							
-							const addressField = document.querySelector('input[name="billing_address_1"]');
-							if (addressField) addressField.value = location.street.name;
-							
-							const cityField = document.querySelector('input[name="billing_city"]');
-							if (cityField) cityField.value = location.city;
-							
-							const postcodeField = document.querySelector('input[name="billing_postcode"]');
-							if (postcodeField) postcodeField.value = location.postcode;
-							
-							const phoneField = document.querySelector('input[name="billing_phone"]');
-							if (phoneField) phoneField.value = user.phone;
-							
-							const emailField = document.querySelector('input[name="billing_email"]');
-							if (emailField) emailField.value = user.email;
-							
-							if (options.enableCompanyName) {
-								const companyName = companyNameOptions[Math.floor(Math.random() * companyNameOptions.length)];
-								const companyNameField = document.querySelector('input[name="billing_company"]');
-								if (companyNameField) companyNameField.value = companyName;
+							const firstNameField = document.querySelector( 'input[name="billing_first_name"]' );
+							if ( firstNameField ) {
+								firstNameField.value = name.first;
 							}
 							
-							if (options.enableAdditionalInfo) {
-								const additionalInfo = additionalInfoOptions[Math.floor(Math.random() * additionalInfoOptions.length)];
-								const additionalInfoField = document.querySelector('#order_comments');
-								if (additionalInfoField) additionalInfoField.value = additionalInfo;
+							const lastNameField = document.querySelector( 'input[name="billing_last_name"]' );
+							if ( lastNameField ) {
+								lastNameField.value = name.last;
 							}
 							
-							const countryField = document.querySelector('select[name="billing_country"]');
-							if (countryField) {
+							const addressField = document.querySelector( 'input[name="billing_address_1"]' );
+							if ( addressField ) {
+								addressField.value = location.street.name;
+							}
+							
+							const cityField = document.querySelector( 'input[name="billing_city"]' );
+							if ( cityField ) {
+								cityField.value = location.city;
+							}
+							
+							const postcodeField = document.querySelector( 'input[name="billing_postcode"]' );
+							if ( postcodeField ) {
+								postcodeField.value = location.postcode;
+							}
+							
+							const phoneField = document.querySelector( 'input[name="billing_phone"]' );
+							if ( phoneField ) {
+								phoneField.value = user.phone;
+							}
+							
+							const emailField = document.querySelector( 'input[name="billing_email"]' );
+							if ( emailField ) {
+								emailField.value = user.email;
+							}
+							
+							if ( options.enableCompanyName ) {
+								const companyName = companyNameOptions[Math.floor( Math.random() * companyNameOptions.length )];
+								const companyNameField = document.querySelector( 'input[name="billing_company"]' );
+								if ( companyNameField ) {
+									companyNameField.value = companyName;
+								}
+							}
+							
+							if ( options.enableAdditionalInfo ) {
+								const additionalInfo = additionalInfoOptions[Math.floor( Math.random() * additionalInfoOptions.length )];
+								const additionalInfoField = document.querySelector( '#order_comments' );
+								if ( additionalInfoField ) {
+									additionalInfoField.value = additionalInfo;
+								}
+							}
+							
+							const countryField = document.querySelector( 'select[name="billing_country"]' );
+							if ( countryField ) {
 								countryField.value = options.userCountry; // Update country field
-								countryField.dispatchEvent(new Event('change', { bubbles: true })); // Dispatch change event
+								countryField.dispatchEvent( new Event( 'change', {bubbles: true} ) ); // Dispatch change event
 							}
 							
-							const stateField = document.querySelector('select[name="billing_state"]');
-							if (stateField) {
+							const stateField = document.querySelector( 'select[name="billing_state"]' );
+							if ( stateField ) {
 								const userState = user.location.state; // Assume user state is available
-								if (userState) {
+								if ( userState ) {
 									let options = stateField.options;
 									
 									// Loop through options and find the one with matching text
-									for (let i = 0; i < options.length; i++) {
-										if (options[i].text === userState) {
+									for ( let i = 0; i < options.length; i ++ ) {
+										if ( options[i].text === userState ) {
 											stateField.value = options[i].value;
 											
 											// Trigger the change event so that Select2 knows about the update
-											stateField.dispatchEvent(new Event('change', { bubbles: true })); // Dispatch change event
+											stateField.dispatchEvent( new Event( 'change', {bubbles: true} ) ); // Dispatch change event
 											break;
 										}
 									}
@@ -100,20 +145,20 @@ document.getElementById('autofill').addEventListener('click', () => {
 							}
 							
 							// Log the user data to the console
-							console.log("Filled user data:", user);
+							console.log( "Filled user data:", user );
 						}
 						
-						fillForm(user, options);
+						fillForm( user, options );
 					},
 					args: [user, options]
 				}, () => {
 					// Remove loading state when done
-					button.classList.remove('loading');
-				});
-			});
-		})
-		.catch(error => {
-			console.error('Error fetching user data:', error);
-			button.classList.remove('loading'); // Remove loading state in case of error
-		});
-});
+					button.classList.remove( 'loading' );
+				} );
+			} );
+		} )
+		.catch( error => {
+			console.error( 'Error fetching user data:', error );
+			button.classList.remove( 'loading' ); // Remove loading state in case of error
+		} );
+} );

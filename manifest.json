@@ -1,27 +1,15 @@
 {
 	"manifest_version" : 3,
 	"name" : "Checkout Autofill",
-	"version" : "1.0",
+	"version" : "1.5",
 	"description" : "Auto-fills WordPress checkout forms with fake data.",
 	"permissions" : [
 		"activeTab",
-		"scripting"
+		"scripting",
+		"storage"
 	],
-	"background" : {
-		"service_worker" : "assets/scripts/background.js"
-	},
 	"action" : {
 		"default_popup" : "index.html",
 		"default_icon" : "assets/icon.png"
-	},
-	"content_scripts" : [
-		{
-			"matches" : [
-				"*://*/*"
-			],
-			"js" : [
-				"assets/scripts/content.js"
-			]
-		}
-	]
+	}
 }
