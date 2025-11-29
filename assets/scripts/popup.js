@@ -57,6 +57,7 @@ document.getElementById( 'autofill' ).addEventListener( 'click', () => {
 								"Test Enterprises",
 								"Sample LLC"
 							];
+							
 							const additionalInfoOptions = [
 								"Please handle with care.",
 								"Gift wrap this item.",
@@ -68,49 +69,94 @@ document.getElementById( 'autofill' ).addEventListener( 'click', () => {
 								"Delivery by the end of the day, please."
 							];
 							
-							const firstNameField = document.querySelector( 'input[name="billing_first_name"]' );
-							if ( firstNameField ) {
-								firstNameField.value = name.first;
-							}
-							
-							const lastNameField = document.querySelector( 'input[name="billing_last_name"]' );
-							if ( lastNameField ) {
-								lastNameField.value = name.last;
-							}
-							
-							const addressField = document.querySelector( 'input[name="billing_address_1"]' );
-							if ( addressField ) {
-								addressField.value = location.street.name;
-							}
-							
-							const cityField = document.querySelector( 'input[name="billing_city"]' );
-							if ( cityField ) {
-								cityField.value = location.city;
-							}
-							
-							const postcodeField = document.querySelector( 'input[name="billing_postcode"]' );
-							if ( postcodeField ) {
-								postcodeField.value = location.postcode;
-							}
-							
-							const phoneField = document.querySelector( 'input[name="billing_phone"]' );
-							if ( phoneField ) {
-								phoneField.value = user.phone;
-							}
-							
-							const emailField = document.querySelector( 'input[name="billing_email"]' );
-							if ( emailField ) {
-								emailField.value = user.email;
-							}
-							
-							if ( options.enableCompanyName ) {
-								const companyName = companyNameOptions[Math.floor( Math.random() * companyNameOptions.length )];
-								const companyNameField = document.querySelector( 'input[name="billing_company"]' );
-								if ( companyNameField ) {
-									companyNameField.value = companyName;
+							// Helper function to fill fields for both billing and shipping
+							function fillAddressFields( prefix, data ) {
+								// First Name
+								const firstNameField = document.querySelector( `input[name="${prefix}_first_name"]` );
+								if ( firstNameField ) {
+									firstNameField.value = data.name.first;
+								}
+								
+								// Last Name
+								const lastNameField = document.querySelector( `input[name="${prefix}_last_name"]` );
+								if ( lastNameField ) {
+									lastNameField.value = data.name.last;
+								}
+								
+								// Company (only for billing, typically)
+								if ( prefix === 'billing' && options.enableCompanyName ) {
+									const companyName = companyNameOptions[Math.floor( Math.random() * companyNameOptions.length )];
+									const companyNameField = document.querySelector( `input[name="${prefix}_company"]` );
+									if ( companyNameField ) {
+										companyNameField.value = companyName;
+									}
+								}
+								
+								// Address
+								const addressField = document.querySelector( `input[name="${prefix}_address_1"]` );
+								if ( addressField ) {
+									addressField.value = data.location.street.name;
+								}
+								
+								// City
+								const cityField = document.querySelector( `input[name="${prefix}_city"]` );
+								if ( cityField ) {
+									cityField.value = data.location.city;
+								}
+								
+								// Postal Code
+								const postcodeField = document.querySelector( `input[name="${prefix}_postcode"]` );
+								if ( postcodeField ) {
+									postcodeField.value = data.location.postcode;
+								}
+								
+								// Phone (only for billing, typically)
+								if ( prefix === 'billing' ) {
+									const phoneField = document.querySelector( `input[name="${prefix}_phone"]` );
+									if ( phoneField ) {
+										phoneField.value = data.user.phone;
+									}
+									
+									// Email (only for billing)
+									const emailField = document.querySelector( `input[name="${prefix}_email"]` );
+									if ( emailField ) {
+										emailField.value = data.user.email;
+									}
+								}
+								
+								// Country
+								const countryField = document.querySelector( `select[name="${prefix}_country"]` );
+								if ( countryField ) {
+									countryField.value = options.userCountry;
+									countryField.dispatchEvent( new Event( 'change', {bubbles: true} ) );
+								}
+								
+								// State
+								const stateField = document.querySelector( `select[name="${prefix}_state"]` );
+								if ( stateField && data.location.state ) {
+									let stateOptions = stateField.options;
+									
+									// Loop through options and find the one with matching text
+									for ( let i = 0; i < stateOptions.length; i ++ ) {
+										if ( stateOptions[i].text === data.location.state ) {
+											stateField.value = stateOptions[i].value;
+											
+											// Trigger the change event so that Select2 knows about the update
+											stateField.dispatchEvent( new Event( 'change', {bubbles: true} ) );
+											break;
+										}
+									}
 								}
 							}
 							
+							// Fill billing address
+							fillAddressFields( 'billing', { name, location, user } );
+							
+							// Fill shipping address with different data
+							const shippingUser = user; // You could fetch another user for shipping if needed
+							fillAddressFields( 'shipping', { name, location, user: shippingUser } );
+							
+							// Handle additional info (order comments)
 							if ( options.enableAdditionalInfo ) {
 								const additionalInfo = additionalInfoOptions[Math.floor( Math.random() * additionalInfoOptions.length )];
 								const additionalInfoField = document.querySelector( '#order_comments' );
@@ -119,29 +165,25 @@ document.getElementById( 'autofill' ).addEventListener( 'click', () => {
 								}
 							}
 							
-							const countryField = document.querySelector( 'select[name="billing_country"]' );
-							if ( countryField ) {
-								countryField.value = options.userCountry; // Update country field
-								countryField.dispatchEvent( new Event( 'change', {bubbles: true} ) ); // Dispatch change event
+							// Also try to fill common non-prefixed fields
+							const firstNameField = document.querySelector( 'input[name="first_name"]' );
+							if ( firstNameField ) {
+								firstNameField.value = name.first;
 							}
 							
-							const stateField = document.querySelector( 'select[name="billing_state"]' );
-							if ( stateField ) {
-								const userState = user.location.state; // Assume user state is available
-								if ( userState ) {
-									let options = stateField.options;
-									
-									// Loop through options and find the one with matching text
-									for ( let i = 0; i < options.length; i ++ ) {
-										if ( options[i].text === userState ) {
-											stateField.value = options[i].value;
-											
-											// Trigger the change event so that Select2 knows about the update
-											stateField.dispatchEvent( new Event( 'change', {bubbles: true} ) ); // Dispatch change event
-											break;
-										}
-									}
-								}
+							const lastNameField = document.querySelector( 'input[name="last_name"]' );
+							if ( lastNameField ) {
+								lastNameField.value = name.last;
+							}
+							
+							const emailField = document.querySelector( 'input[type="email"]' );
+							if ( emailField && emailField.value === '' ) {
+								emailField.value = user.email;
+							}
+							
+							const phoneField = document.querySelector( 'input[type="tel"]' );
+							if ( phoneField && phoneField.value === '' ) {
+								phoneField.value = user.phone;
 							}
 							
 							// Log the user data to the console

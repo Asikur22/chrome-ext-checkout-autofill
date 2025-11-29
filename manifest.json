@@ -8,6 +8,10 @@
 		"scripting",
 		"storage"
 	],
+	"host_permissions" : [
+		"http://*/*",
+		"https://*/*"
+	],
 	"action" : {
 		"default_popup" : "index.html",
 		"default_icon" : "assets/icon.png"
